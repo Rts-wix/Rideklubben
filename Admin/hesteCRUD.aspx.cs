@@ -110,9 +110,11 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
             hesten.Højde = Convert.ToDouble(TextBoxHøjde.Text);
 
             // Åh suk. Jeg har lavet disse felter "not null" i databasen, så der skal være en værdi i.
-            hesten.Forælder_HesteId = ctx.Heste.Single(f => f.Navn == "Stamfar").HesteId;
+            hesten.Fader = ctx.Heste.Single(f => f.Navn == "Stamfar");
+            hesten.Moder = ctx.Heste.Single(f => f.Navn == "Stammor");
             hesten.Fødestald = "";
             hesten.FødeDato = DateTime.Now;
+            hesten.BilledeSti = "";
 
             GemHesteBillede(hesten);
 
@@ -135,6 +137,9 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
 
             ImageNet.FluentImage img = ImageNet.FluentImage.FromStream(FileUploadBillede.FileContent);
 
+            Billede hestensBillede = new Billede();
+            hestensBillede.full = Convert.FromBase64String(img.ToString());
+
             Rectangle crop;
             if (img.Current.Height > img.Current.Width)  // højformat
             {
@@ -152,6 +157,12 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
 
             img.Save(realPath + guid + ".png", ImageNet.OutputFormat.Png);
             hesten.BilledeSti = path + guid + ".png";
+
+            hestensBillede.large = Convert.FromBase64String(img.ToString());
+            hestensBillede.small = Convert.FromBase64String(img.Resize.Scale(200).ToString());
+            hestensBillede.tiny = Convert.FromBase64String(img.Resize.Scale(40).ToString());
+  
+            hesten.Billede = hestensBillede;
         }
         else
         {
