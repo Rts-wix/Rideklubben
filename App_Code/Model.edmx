@@ -6,6 +6,7 @@
     <edmx:StorageModels>
       <Schema Namespace="DatabaseModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2008" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/02/edm/ssdl">
         <EntityContainer Name="DatabaseModelStoreContainer">
+          <EntitySet Name="Billeder" EntityType="DatabaseModel.Store.Billeder" store:Type="Tables" Schema="dbo" />
           <EntitySet Name="Ejerskaber" EntityType="DatabaseModel.Store.Ejerskaber" store:Type="Tables" Schema="dbo" />
           <EntitySet Name="Heste" EntityType="DatabaseModel.Store.Heste" store:Type="Tables" Schema="dbo" />
           <EntitySet Name="Ryttere" EntityType="DatabaseModel.Store.Ryttere" store:Type="Tables" Schema="dbo" />
@@ -15,17 +16,25 @@
             <End Role="Ryttere" EntitySet="Ryttere" />
             <End Role="Ryttere_Ejer" EntitySet="Ryttere_Ejer" />
           </AssociationSet>
-          <AssociationSet Name="FK_EjerEjerskab" Association="DatabaseModel.Store.FK_EjerEjerskab">
+          <AssociationSet Name="FK_Ejerskaber_Heste" Association="DatabaseModel.Store.FK_Ejerskaber_Heste">
+            <End Role="Heste" EntitySet="Heste" />
+            <End Role="Ejerskaber" EntitySet="Ejerskaber" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ejerskaber_Ryttere_Ejer" Association="DatabaseModel.Store.FK_Ejerskaber_Ryttere_Ejer">
             <End Role="Ryttere_Ejer" EntitySet="Ryttere_Ejer" />
             <End Role="Ejerskaber" EntitySet="Ejerskaber" />
           </AssociationSet>
-          <AssociationSet Name="FK_FaderHest" Association="DatabaseModel.Store.FK_FaderHest">
+          <AssociationSet Name="FK_Fader" Association="DatabaseModel.Store.FK_Fader">
             <End Role="Heste" EntitySet="Heste" />
             <End Role="Heste1" EntitySet="Heste" />
           </AssociationSet>
-          <AssociationSet Name="FK_HestEjerskab" Association="DatabaseModel.Store.FK_HestEjerskab">
+          <AssociationSet Name="FK_Heste_Billeder" Association="DatabaseModel.Store.FK_Heste_Billeder">
+            <End Role="Billeder" EntitySet="Billeder" />
             <End Role="Heste" EntitySet="Heste" />
-            <End Role="Ejerskaber" EntitySet="Ejerskaber" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Moder" Association="DatabaseModel.Store.FK_Moder">
+            <End Role="Heste" EntitySet="Heste" />
+            <End Role="Heste1" EntitySet="Heste" />
           </AssociationSet>
           <AssociationSet Name="FK_RytterRiderpåHest_Hest" Association="DatabaseModel.Store.FK_RytterRiderpåHest_Hest">
             <End Role="Heste" EntitySet="Heste" />
@@ -36,6 +45,16 @@
             <End Role="RytterRiderpåHest" EntitySet="RytterRiderpåHest" />
           </AssociationSet>
         </EntityContainer>
+        <EntityType Name="Billeder">
+          <Key>
+            <PropertyRef Name="BilledeID" />
+          </Key>
+          <Property Name="BilledeID" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="full" Type="image" />
+          <Property Name="large" Type="image" />
+          <Property Name="small" Type="image" />
+          <Property Name="tiny" Type="image" />
+        </EntityType>
         <EntityType Name="Ejerskaber">
           <Key>
             <PropertyRef Name="EjerId" />
@@ -44,8 +63,6 @@
           <Property Name="andele" Type="smallint" Nullable="false" />
           <Property Name="EjerId" Type="int" Nullable="false" />
           <Property Name="HesteID" Type="int" Nullable="false" />
-          <Property Name="Ejer_RytterId" Type="int" Nullable="false" />
-          <Property Name="Hest_HesteId" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="Heste">
           <Key>
@@ -57,9 +74,11 @@
           <Property Name="FødeDato" Type="datetime" Nullable="false" />
           <Property Name="Højde" Type="float" Nullable="false" />
           <Property Name="Vægt" Type="float" Nullable="false" />
+          <Property Name="FaderID" Type="int" />
+          <Property Name="ModerID" Type="int" />
           <Property Name="Hingst" Type="bit" Nullable="false" />
-          <Property Name="BilledeSti" Type="nvarchar(max)" Nullable="false" />
-          <Property Name="Forælder_HesteId" Type="int" Nullable="false" />
+          <Property Name="BilledeSti" Type="nvarchar" Nullable="false" MaxLength="50" />
+          <Property Name="BilledeID" Type="int" />
         </EntityType>
         <EntityType Name="Ryttere">
           <Key>
@@ -73,9 +92,9 @@
         </EntityType>
         <EntityType Name="Ryttere_Ejer">
           <Key>
-            <PropertyRef Name="RytterId" />
+            <PropertyRef Name="RytterEjerId" />
           </Key>
-          <Property Name="RytterId" Type="int" Nullable="false" />
+          <Property Name="RytterEjerId" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="RytterRiderpåHest">
           <Key>
@@ -95,43 +114,67 @@
               <PropertyRef Name="RytterId" />
             </Principal>
             <Dependent Role="Ryttere_Ejer">
-              <PropertyRef Name="RytterId" />
+              <PropertyRef Name="RytterEjerId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_EjerEjerskab">
+        <Association Name="FK_Ejerskaber_Heste">
+          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="1" />
+          <End Role="Ejerskaber" Type="DatabaseModel.Store.Ejerskaber" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Heste">
+              <PropertyRef Name="HesteId" />
+            </Principal>
+            <Dependent Role="Ejerskaber">
+              <PropertyRef Name="HesteID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ejerskaber_Ryttere_Ejer">
           <End Role="Ryttere_Ejer" Type="DatabaseModel.Store.Ryttere_Ejer" Multiplicity="1" />
           <End Role="Ejerskaber" Type="DatabaseModel.Store.Ejerskaber" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Ryttere_Ejer">
-              <PropertyRef Name="RytterId" />
+              <PropertyRef Name="RytterEjerId" />
             </Principal>
             <Dependent Role="Ejerskaber">
-              <PropertyRef Name="Ejer_RytterId" />
+              <PropertyRef Name="EjerId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_FaderHest">
-          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="1" />
+        <Association Name="FK_Fader">
+          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="0..1" />
           <End Role="Heste1" Type="DatabaseModel.Store.Heste" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Heste">
               <PropertyRef Name="HesteId" />
             </Principal>
             <Dependent Role="Heste1">
-              <PropertyRef Name="Forælder_HesteId" />
+              <PropertyRef Name="FaderID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_HestEjerskab">
-          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="1" />
-          <End Role="Ejerskaber" Type="DatabaseModel.Store.Ejerskaber" Multiplicity="*" />
+        <Association Name="FK_Heste_Billeder">
+          <End Role="Billeder" Type="DatabaseModel.Store.Billeder" Multiplicity="0..1" />
+          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Billeder">
+              <PropertyRef Name="BilledeID" />
+            </Principal>
+            <Dependent Role="Heste">
+              <PropertyRef Name="BilledeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Moder">
+          <End Role="Heste" Type="DatabaseModel.Store.Heste" Multiplicity="0..1" />
+          <End Role="Heste1" Type="DatabaseModel.Store.Heste" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Heste">
               <PropertyRef Name="HesteId" />
             </Principal>
-            <Dependent Role="Ejerskaber">
-              <PropertyRef Name="Hest_HesteId" />
+            <Dependent Role="Heste1">
+              <PropertyRef Name="ModerID" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -165,31 +208,51 @@
     <edmx:ConceptualModels>
       <Schema Namespace="DatabaseModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
         <EntityContainer Name="RideklubbenContext" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Billeder" EntityType="DatabaseModel.Billede" />
           <EntitySet Name="Ejerskaber" EntityType="DatabaseModel.Ejerskab" />
           <EntitySet Name="Heste" EntityType="DatabaseModel.Hest" />
           <EntitySet Name="Ryttere" EntityType="DatabaseModel.Rytter" />
-          <EntitySet Name="Ryttere_Ejer" EntityType="DatabaseModel.Rytter_Ejer" />
-          <AssociationSet Name="FK_EjerEjerskab" Association="DatabaseModel.FK_EjerEjerskab">
-            <End Role="Ryttere_Ejer" EntitySet="Ryttere_Ejer" />
-            <End Role="Ejerskaber" EntitySet="Ejerskaber" />
+          <EntitySet Name="Rytter_Ejere" EntityType="DatabaseModel.Rytter_Ejer" />
+          <AssociationSet Name="FK_Heste_Billeder" Association="DatabaseModel.FK_Heste_Billeder">
+            <End Role="Billede" EntitySet="Billeder" />
+            <End Role="Heste" EntitySet="Heste" />
           </AssociationSet>
-          <AssociationSet Name="FK_HestEjerskab" Association="DatabaseModel.FK_HestEjerskab">
+          <AssociationSet Name="FK_Ejerskaber_Heste" Association="DatabaseModel.FK_Ejerskaber_Heste">
             <End Role="Heste" EntitySet="Heste" />
             <End Role="Ejerskaber" EntitySet="Ejerskaber" />
           </AssociationSet>
-          <AssociationSet Name="FK_FaderHest" Association="DatabaseModel.FK_FaderHest">
+          <AssociationSet Name="FK_Ejerskaber_Ryttere_Ejer" Association="DatabaseModel.FK_Ejerskaber_Ryttere_Ejer">
+            <End Role="Ryttere_Ejer" EntitySet="Rytter_Ejere" />
+            <End Role="Ejerskaber" EntitySet="Ejerskaber" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Fader" Association="DatabaseModel.FK_Fader">
+            <End Role="Heste" EntitySet="Heste" />
+            <End Role="Heste1" EntitySet="Heste" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Moder" Association="DatabaseModel.FK_Moder">
             <End Role="Heste" EntitySet="Heste" />
             <End Role="Heste1" EntitySet="Heste" />
           </AssociationSet>
           <AssociationSet Name="FK_Ejer_inherits_Rytter" Association="DatabaseModel.FK_Ejer_inherits_Rytter">
-            <End EntitySet="Ryttere" Role="Ryttere" />
-            <End EntitySet="Ryttere_Ejer" Role="Ryttere_Ejer" />
+            <End Role="Ryttere" EntitySet="Ryttere" />
+            <End Role="Ryttere_Ejer" EntitySet="Rytter_Ejere" />
           </AssociationSet>
           <AssociationSet Name="RytterRiderpåHest" Association="DatabaseModel.RytterRiderpåHest">
             <End Role="Heste" EntitySet="Heste" />
             <End Role="Ryttere" EntitySet="Ryttere" />
           </AssociationSet>
         </EntityContainer>
+        <EntityType Name="Billede">
+          <Key>
+            <PropertyRef Name="BilledeID" />
+          </Key>
+          <Property Name="BilledeID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="full" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="large" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="small" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <Property Name="tiny" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <NavigationProperty Name="Heste" Relationship="DatabaseModel.FK_Heste_Billeder" FromRole="Billede" ToRole="Heste" />
+        </EntityType>
         <EntityType Name="Ejerskab">
           <Key>
             <PropertyRef Name="EjerId" />
@@ -198,10 +261,8 @@
           <Property Name="andele" Type="Int16" Nullable="false" />
           <Property Name="EjerId" Type="Int32" Nullable="false" />
           <Property Name="HesteID" Type="Int32" Nullable="false" />
-          <Property Name="Ejer_RytterId" Type="Int32" Nullable="false" />
-          <Property Name="Hest_HesteId" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="Ryttere_Ejer" Relationship="DatabaseModel.FK_EjerEjerskab" FromRole="Ejerskaber" ToRole="Ryttere_Ejer" />
-          <NavigationProperty Name="Heste" Relationship="DatabaseModel.FK_HestEjerskab" FromRole="Ejerskaber" ToRole="Heste" />
+          <NavigationProperty Name="Heste" Relationship="DatabaseModel.FK_Ejerskaber_Heste" FromRole="Ejerskaber" ToRole="Heste" />
+          <NavigationProperty Name="Ryttere_Ejer" Relationship="DatabaseModel.FK_Ejerskaber_Ryttere_Ejer" FromRole="Ejerskaber" ToRole="Ryttere_Ejer" />
         </EntityType>
         <EntityType Name="Hest">
           <Key>
@@ -214,11 +275,13 @@
           <Property Name="Højde" Type="Double" Nullable="false" />
           <Property Name="Vægt" Type="Double" Nullable="false" />
           <Property Name="Hingst" Type="Boolean" Nullable="false" />
-          <Property Name="BilledeSti" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
-          <Property Name="Forælder_HesteId" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="Ejerskaber" Relationship="DatabaseModel.FK_HestEjerskab" FromRole="Heste" ToRole="Ejerskaber" />
-          <NavigationProperty Name="Heste1" Relationship="DatabaseModel.FK_FaderHest" FromRole="Heste" ToRole="Heste1" />
-          <NavigationProperty Name="Heste2" Relationship="DatabaseModel.FK_FaderHest" FromRole="Heste1" ToRole="Heste" />
+          <Property Name="BilledeSti" Type="String" Nullable="false" MaxLength="50" Unicode="true" FixedLength="false" />
+          <NavigationProperty Name="Billede" Relationship="DatabaseModel.FK_Heste_Billeder" FromRole="Heste" ToRole="Billede" />
+          <NavigationProperty Name="Ejerskaber" Relationship="DatabaseModel.FK_Ejerskaber_Heste" FromRole="Heste" ToRole="Ejerskaber" />
+          <NavigationProperty Name="Faderskaber" Relationship="DatabaseModel.FK_Fader" FromRole="Heste" ToRole="Heste1" />
+          <NavigationProperty Name="Fader" Relationship="DatabaseModel.FK_Fader" FromRole="Heste1" ToRole="Heste" />
+          <NavigationProperty Name="Moderskaber" Relationship="DatabaseModel.FK_Moder" FromRole="Heste" ToRole="Heste1" />
+          <NavigationProperty Name="Moder" Relationship="DatabaseModel.FK_Moder" FromRole="Heste1" ToRole="Heste" />
           <NavigationProperty Name="Ryttere" Relationship="DatabaseModel.RytterRiderpåHest" FromRole="Heste" ToRole="Ryttere" />
         </EntityType>
         <EntityType Name="Rytter">
@@ -235,59 +298,59 @@
         </EntityType>
         <EntityType Name="Rytter_Ejer">
           <Key>
-            <PropertyRef Name="RytterId" />
+            <PropertyRef Name="RytterEjerId" />
           </Key>
-          <Property Name="RytterId" Nullable="false" Type="Int32" />
-          <NavigationProperty Name="Ejerskaber" Relationship="DatabaseModel.FK_EjerEjerskab" FromRole="Ryttere_Ejer" ToRole="Ejerskaber" />
+          <Property Name="RytterEjerId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Ejerskaber" Relationship="DatabaseModel.FK_Ejerskaber_Ryttere_Ejer" FromRole="Ryttere_Ejer" ToRole="Ejerskaber" />
           <NavigationProperty Name="Ryttere" Relationship="DatabaseModel.FK_Ejer_inherits_Rytter" FromRole="Ryttere_Ejer" ToRole="Ryttere" />
         </EntityType>
-        <Association Name="FK_EjerEjerskab">
+        <Association Name="FK_Heste_Billeder">
+          <End Role="Billede" Type="DatabaseModel.Billede" Multiplicity="0..1" />
+          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="*" />
+        </Association>
+        <Association Name="FK_Ejerskaber_Heste">
+          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="1" />
+          <End Role="Ejerskaber" Type="DatabaseModel.Ejerskab" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Heste">
+              <PropertyRef Name="HesteId" />
+            </Principal>
+            <Dependent Role="Ejerskaber">
+              <PropertyRef Name="HesteID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ejerskaber_Ryttere_Ejer">
           <End Role="Ryttere_Ejer" Type="DatabaseModel.Rytter_Ejer" Multiplicity="1" />
           <End Role="Ejerskaber" Type="DatabaseModel.Ejerskab" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Ryttere_Ejer">
-              <PropertyRef Name="RytterId" />
+              <PropertyRef Name="RytterEjerId" />
             </Principal>
             <Dependent Role="Ejerskaber">
-              <PropertyRef Name="Ejer_RytterId" />
+              <PropertyRef Name="EjerId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_HestEjerskab">
-          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="1" />
-          <End Role="Ejerskaber" Type="DatabaseModel.Ejerskab" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Heste">
-              <PropertyRef Name="HesteId" />
-            </Principal>
-            <Dependent Role="Ejerskaber">
-              <PropertyRef Name="Hest_HesteId" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_FaderHest">
-          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="1" />
+        <Association Name="FK_Fader">
+          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="0..1" />
           <End Role="Heste1" Type="DatabaseModel.Hest" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Heste">
-              <PropertyRef Name="HesteId" />
-            </Principal>
-            <Dependent Role="Heste1">
-              <PropertyRef Name="Forælder_HesteId" />
-            </Dependent>
-          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Moder">
+          <End Role="Heste" Type="DatabaseModel.Hest" Multiplicity="0..1" />
+          <End Role="Heste1" Type="DatabaseModel.Hest" Multiplicity="*" />
         </Association>
         <Association Name="FK_Ejer_inherits_Rytter">
-          <End Type="DatabaseModel.Rytter" Multiplicity="1" Role="Ryttere">
+          <End Role="Ryttere" Type="DatabaseModel.Rytter" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
-          <End Type="DatabaseModel.Rytter_Ejer" Multiplicity="0..1" Role="Ryttere_Ejer" />
+          <End Role="Ryttere_Ejer" Type="DatabaseModel.Rytter_Ejer" Multiplicity="0..1" />
           <ReferentialConstraint>
             <Principal Role="Ryttere">
               <PropertyRef Name="RytterId" />
             </Principal>
             <Dependent Role="Ryttere_Ejer">
-              <PropertyRef Name="RytterId" />
+              <PropertyRef Name="RytterEjerId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -301,12 +364,17 @@
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2008/09/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="DatabaseModelStoreContainer" CdmEntityContainer="RideklubbenContext">
+          <EntitySetMapping Name="Billeder"><EntityTypeMapping TypeName="DatabaseModel.Billede"><MappingFragment StoreEntitySet="Billeder">
+            <ScalarProperty Name="BilledeID" ColumnName="BilledeID" />
+            <ScalarProperty Name="full" ColumnName="full" />
+            <ScalarProperty Name="large" ColumnName="large" />
+            <ScalarProperty Name="small" ColumnName="small" />
+            <ScalarProperty Name="tiny" ColumnName="tiny" />
+          </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="Ejerskaber"><EntityTypeMapping TypeName="DatabaseModel.Ejerskab"><MappingFragment StoreEntitySet="Ejerskaber">
             <ScalarProperty Name="andele" ColumnName="andele" />
             <ScalarProperty Name="EjerId" ColumnName="EjerId" />
             <ScalarProperty Name="HesteID" ColumnName="HesteID" />
-            <ScalarProperty Name="Ejer_RytterId" ColumnName="Ejer_RytterId" />
-            <ScalarProperty Name="Hest_HesteId" ColumnName="Hest_HesteId" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="Heste"><EntityTypeMapping TypeName="DatabaseModel.Hest"><MappingFragment StoreEntitySet="Heste">
             <ScalarProperty Name="HesteId" ColumnName="HesteId" />
@@ -317,7 +385,6 @@
             <ScalarProperty Name="Vægt" ColumnName="Vægt" />
             <ScalarProperty Name="Hingst" ColumnName="Hingst" />
             <ScalarProperty Name="BilledeSti" ColumnName="BilledeSti" />
-            <ScalarProperty Name="Forælder_HesteId" ColumnName="Forælder_HesteId" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
           <EntitySetMapping Name="Ryttere"><EntityTypeMapping TypeName="DatabaseModel.Rytter"><MappingFragment StoreEntitySet="Ryttere">
             <ScalarProperty Name="RytterId" ColumnName="RytterId" />
@@ -326,9 +393,36 @@
             <ScalarProperty Name="RytterAncinitet" ColumnName="RytterAncinitet" />
             <ScalarProperty Name="BilledeSti" ColumnName="BilledeSti" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
-          <EntitySetMapping Name="Ryttere_Ejer"><EntityTypeMapping TypeName="DatabaseModel.Rytter_Ejer"><MappingFragment StoreEntitySet="Ryttere_Ejer">
-            <ScalarProperty Name="RytterId" ColumnName="RytterId" />
+          <EntitySetMapping Name="Rytter_Ejere"><EntityTypeMapping TypeName="DatabaseModel.Rytter_Ejer"><MappingFragment StoreEntitySet="Ryttere_Ejer">
+            <ScalarProperty Name="RytterEjerId" ColumnName="RytterEjerId" />
           </MappingFragment></EntityTypeMapping></EntitySetMapping>
+          <AssociationSetMapping Name="FK_Heste_Billeder" TypeName="DatabaseModel.FK_Heste_Billeder" StoreEntitySet="Heste">
+            <EndProperty Name="Billede">
+              <ScalarProperty Name="BilledeID" ColumnName="BilledeID" />
+            </EndProperty>
+            <EndProperty Name="Heste">
+              <ScalarProperty Name="HesteId" ColumnName="HesteId" />
+            </EndProperty>
+            <Condition ColumnName="BilledeID" IsNull="false" />
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="FK_Fader" TypeName="DatabaseModel.FK_Fader" StoreEntitySet="Heste">
+            <EndProperty Name="Heste">
+              <ScalarProperty Name="HesteId" ColumnName="FaderID" />
+            </EndProperty>
+            <EndProperty Name="Heste1">
+              <ScalarProperty Name="HesteId" ColumnName="HesteId" />
+            </EndProperty>
+            <Condition ColumnName="FaderID" IsNull="false" />
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="FK_Moder" TypeName="DatabaseModel.FK_Moder" StoreEntitySet="Heste">
+            <EndProperty Name="Heste">
+              <ScalarProperty Name="HesteId" ColumnName="ModerID" />
+            </EndProperty>
+            <EndProperty Name="Heste1">
+              <ScalarProperty Name="HesteId" ColumnName="HesteId" />
+            </EndProperty>
+            <Condition ColumnName="ModerID" IsNull="false" />
+          </AssociationSetMapping>
           <AssociationSetMapping Name="RytterRiderpåHest" TypeName="DatabaseModel.RytterRiderpåHest" StoreEntitySet="RytterRiderpåHest">
             <EndProperty Name="Heste">
               <ScalarProperty Name="HesteId" ColumnName="Hest_HesteId" />
@@ -352,38 +446,50 @@
       <DesignerInfoPropertySet>
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
         <DesignerProperty Name="EnablePluralization" Value="False" />
-        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="False" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
       </DesignerInfoPropertySet>
     </Options>
     <!-- Diagram content (shape and connector positions) -->
     <Diagrams>
-      <Diagram Name="Model" ZoomLevel="62">
-        <EntityTypeShape EntityType="DatabaseModel.Ejerskab" Width="1.5" PointX="5" PointY="2.125" Height="2.3648893229166656" IsExpanded="true" />
-        <EntityTypeShape EntityType="DatabaseModel.Hest" Width="1.5" PointX="0.75" PointY="2.125" Height="3.5186979166666661" IsExpanded="true" />
-        <EntityTypeShape EntityType="DatabaseModel.Rytter" Width="1.5" PointX="2.75" PointY="4.5" Height="2.3648893229166656" IsExpanded="true" />
-        <EntityTypeShape EntityType="DatabaseModel.Rytter_Ejer" Width="1.5" PointX="5.125" PointY="5.375" Height="1.5956835937499996" IsExpanded="true" />
-        <AssociationConnector Association="DatabaseModel.FK_EjerEjerskab" ManuallyRouted="false">
-          <ConnectorPoint PointX="5.8125" PointY="5.375" />
-          <ConnectorPoint PointX="5.8125" PointY="4.4898893229166656" />
+      <Diagram Name="Model">
+        <EntityTypeShape EntityType="DatabaseModel.Billede" Width="1.5" PointX="0.75" PointY="2.5" Height="2.1725878906250005" IsExpanded="true" />
+        <EntityTypeShape EntityType="DatabaseModel.Ejerskab" Width="1.5" PointX="9.75" PointY="3.375" Height="1.9802864583333335" IsExpanded="true" />
+        <EntityTypeShape EntityType="DatabaseModel.Hest" Width="1.5" PointX="3" PointY="1.625" Height="3.90330078125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DatabaseModel.Rytter" Width="1.5" PointX="5.25" PointY="5.125" Height="2.3648893229166656" IsExpanded="true" />
+        <EntityTypeShape EntityType="DatabaseModel.Rytter_Ejer" Width="1.5" PointX="7.5" PointY="5.5" Height="1.5956835937499996" IsExpanded="true" />
+        <AssociationConnector Association="DatabaseModel.FK_Heste_Billeder" ManuallyRouted="false">
+          <ConnectorPoint PointX="2.25" PointY="3.5862939453125002" />
+          <ConnectorPoint PointX="3" PointY="3.5862939453125002" />
         </AssociationConnector>
-        <AssociationConnector Association="DatabaseModel.FK_HestEjerskab" ManuallyRouted="false">
-          <ConnectorPoint PointX="2.25" PointY="3.3074446614583328" />
-          <ConnectorPoint PointX="5" PointY="3.3074446614583328" />
+        <AssociationConnector Association="DatabaseModel.FK_Ejerskaber_Heste" ManuallyRouted="false">
+          <ConnectorPoint PointX="4.5" PointY="4.21875" />
+          <ConnectorPoint PointX="9.75" PointY="4.21875" />
         </AssociationConnector>
-        <AssociationConnector Association="DatabaseModel.FK_FaderHest" ManuallyRouted="false">
-          <ConnectorPoint PointX="1.2819230769230767" PointY="5.6436979166666656" />
-          <ConnectorPoint PointX="1.2819230769230767" PointY="5.8936979166666656" />
-          <ConnectorPoint PointX="1.7284615384615383" PointY="5.8936979166666656" />
-          <ConnectorPoint PointX="1.7284615384615383" PointY="5.6436979166666656" />
+        <AssociationConnector Association="DatabaseModel.FK_Ejerskaber_Ryttere_Ejer" ManuallyRouted="false">
+          <ConnectorPoint PointX="9" PointY="6.297841796875" />
+          <ConnectorPoint PointX="10.5" PointY="6.297841796875" />
+          <ConnectorPoint PointX="10.5" PointY="5.3552864583333335" />
         </AssociationConnector>
-        <AssociationConnector ManuallyRouted="false" Association="DatabaseModel.FK_Ejer_inherits_Rytter">
-          <ConnectorPoint PointX="4.25" PointY="6.1199446614583328" />
-          <ConnectorPoint PointX="5.125" PointY="6.1199446614583328" />
+        <AssociationConnector Association="DatabaseModel.FK_Fader" ManuallyRouted="false">
+          <ConnectorPoint PointX="3.5319230769230767" PointY="5.52830078125" />
+          <ConnectorPoint PointX="3.5319230769230767" PointY="5.77830078125" />
+          <ConnectorPoint PointX="3.9784615384615383" PointY="5.77830078125" />
+          <ConnectorPoint PointX="3.9784615384615383" PointY="5.52830078125" />
+        </AssociationConnector>
+        <AssociationConnector Association="DatabaseModel.FK_Moder" ManuallyRouted="false">
+          <ConnectorPoint PointX="3.5319230769230767" PointY="1.625" />
+          <ConnectorPoint PointX="3.5319230769230767" PointY="1.375" />
+          <ConnectorPoint PointX="3.9784615384615383" PointY="1.375" />
+          <ConnectorPoint PointX="3.9784615384615383" PointY="1.625" />
+        </AssociationConnector>
+        <AssociationConnector Association="DatabaseModel.FK_Ejer_inherits_Rytter" ManuallyRouted="false">
+          <ConnectorPoint PointX="6.75" PointY="6.297841796875" />
+          <ConnectorPoint PointX="7.5" PointY="6.297841796875" />
         </AssociationConnector>
         <AssociationConnector Association="DatabaseModel.RytterRiderpåHest" ManuallyRouted="false">
-          <ConnectorPoint PointX="2.25" PointY="5.0718489583333328" />
-          <ConnectorPoint PointX="2.75" PointY="5.0718489583333328" />
+          <ConnectorPoint PointX="4.5" PointY="5.326650390625" />
+          <ConnectorPoint PointX="5.25" PointY="5.326650390625" />
         </AssociationConnector>
       </Diagram>
     </Diagrams>

@@ -40,6 +40,12 @@ public partial class RideklubbenContext : ObjectContext
 
     #region ObjectSet Properties
 
+    public ObjectSet<Billede> Billeder
+    {
+        get { return _billeder  ?? (_billeder = CreateObjectSet<Billede>("Billeder")); }
+    }
+    private ObjectSet<Billede> _billeder;
+
     public ObjectSet<Ejerskab> Ejerskaber
     {
         get { return _ejerskaber  ?? (_ejerskaber = CreateObjectSet<Ejerskab>("Ejerskaber")); }
@@ -58,11 +64,11 @@ public partial class RideklubbenContext : ObjectContext
     }
     private ObjectSet<Rytter> _ryttere;
 
-    public ObjectSet<Rytter_Ejer> Ryttere_Ejer
+    public ObjectSet<Rytter_Ejer> Rytter_Ejere
     {
-        get { return _ryttere_Ejer  ?? (_ryttere_Ejer = CreateObjectSet<Rytter_Ejer>("Ryttere_Ejer")); }
+        get { return _rytter_Ejere  ?? (_rytter_Ejere = CreateObjectSet<Rytter_Ejer>("Rytter_Ejere")); }
     }
-    private ObjectSet<Rytter_Ejer> _ryttere_Ejer;
+    private ObjectSet<Rytter_Ejer> _rytter_Ejere;
 
     #endregion
 }

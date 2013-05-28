@@ -30,6 +30,102 @@ public class FixupCollection<T> : ObservableCollection<T>
         }
     }
 }
+public partial class Billede
+{
+    #region Primitive Properties
+
+    public virtual int BilledeID
+    {
+        get;
+        set;
+    }
+
+    public virtual byte[] full
+    {
+        get;
+        set;
+    }
+
+    public virtual byte[] large
+    {
+        get;
+        set;
+    }
+
+    public virtual byte[] small
+    {
+        get;
+        set;
+    }
+
+    public virtual byte[] tiny
+    {
+        get;
+        set;
+    }
+
+    #endregion
+    #region Navigation Properties
+
+    public virtual ICollection<Hest> Heste
+    {
+        get
+        {
+            if (_heste == null)
+            {
+                var newCollection = new FixupCollection<Hest>();
+                newCollection.CollectionChanged += FixupHeste;
+                _heste = newCollection;
+            }
+            return _heste;
+        }
+        set
+        {
+            if (!ReferenceEquals(_heste, value))
+            {
+                var previousValue = _heste as FixupCollection<Hest>;
+                if (previousValue != null)
+                {
+                    previousValue.CollectionChanged -= FixupHeste;
+                }
+                _heste = value;
+                var newValue = value as FixupCollection<Hest>;
+                if (newValue != null)
+                {
+                    newValue.CollectionChanged += FixupHeste;
+                }
+            }
+        }
+    }
+    private ICollection<Hest> _heste;
+
+    #endregion
+    #region Association Fixup
+
+    private void FixupHeste(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (Hest item in e.NewItems)
+            {
+                item.Billede = this;
+            }
+        }
+
+        if (e.OldItems != null)
+        {
+            foreach (Hest item in e.OldItems)
+            {
+                if (ReferenceEquals(item.Billede, this))
+                {
+                    item.Billede = null;
+                }
+            }
+        }
+    }
+
+    #endregion
+}
 public partial class Ejerskab
 {
     #region Primitive Properties
@@ -42,67 +138,40 @@ public partial class Ejerskab
 
     public virtual int EjerId
     {
-        get;
-        set;
-    }
-
-    public virtual int HesteID
-    {
-        get;
-        set;
-    }
-
-    public virtual int Ejer_RytterId
-    {
-        get { return _ejer_RytterId; }
+        get { return _ejerId; }
         set
         {
-            if (_ejer_RytterId != value)
+            if (_ejerId != value)
             {
-                if (Ryttere_Ejer != null && Ryttere_Ejer.RytterId != value)
+                if (Ryttere_Ejer != null && Ryttere_Ejer.RytterEjerId != value)
                 {
                     Ryttere_Ejer = null;
                 }
-                _ejer_RytterId = value;
+                _ejerId = value;
             }
         }
     }
-    private int _ejer_RytterId;
+    private int _ejerId;
 
-    public virtual int Hest_HesteId
+    public virtual int HesteID
     {
-        get { return _hest_HesteId; }
+        get { return _hesteID; }
         set
         {
-            if (_hest_HesteId != value)
+            if (_hesteID != value)
             {
                 if (Heste != null && Heste.HesteId != value)
                 {
                     Heste = null;
                 }
-                _hest_HesteId = value;
+                _hesteID = value;
             }
         }
     }
-    private int _hest_HesteId;
+    private int _hesteID;
 
     #endregion
     #region Navigation Properties
-
-    public virtual Rytter_Ejer Ryttere_Ejer
-    {
-        get { return _ryttere_Ejer; }
-        set
-        {
-            if (!ReferenceEquals(_ryttere_Ejer, value))
-            {
-                var previousValue = _ryttere_Ejer;
-                _ryttere_Ejer = value;
-                FixupRyttere_Ejer(previousValue);
-            }
-        }
-    }
-    private Rytter_Ejer _ryttere_Ejer;
 
     public virtual Hest Heste
     {
@@ -119,28 +188,23 @@ public partial class Ejerskab
     }
     private Hest _heste;
 
-    #endregion
-    #region Association Fixup
-
-    private void FixupRyttere_Ejer(Rytter_Ejer previousValue)
+    public virtual Rytter_Ejer Ryttere_Ejer
     {
-        if (previousValue != null && previousValue.Ejerskaber.Contains(this))
+        get { return _ryttere_Ejer; }
+        set
         {
-            previousValue.Ejerskaber.Remove(this);
-        }
-
-        if (Ryttere_Ejer != null)
-        {
-            if (!Ryttere_Ejer.Ejerskaber.Contains(this))
+            if (!ReferenceEquals(_ryttere_Ejer, value))
             {
-                Ryttere_Ejer.Ejerskaber.Add(this);
-            }
-            if (Ejer_RytterId != Ryttere_Ejer.RytterId)
-            {
-                Ejer_RytterId = Ryttere_Ejer.RytterId;
+                var previousValue = _ryttere_Ejer;
+                _ryttere_Ejer = value;
+                FixupRyttere_Ejer(previousValue);
             }
         }
     }
+    private Rytter_Ejer _ryttere_Ejer;
+
+    #endregion
+    #region Association Fixup
 
     private void FixupHeste(Hest previousValue)
     {
@@ -155,9 +219,29 @@ public partial class Ejerskab
             {
                 Heste.Ejerskaber.Add(this);
             }
-            if (Hest_HesteId != Heste.HesteId)
+            if (HesteID != Heste.HesteId)
             {
-                Hest_HesteId = Heste.HesteId;
+                HesteID = Heste.HesteId;
+            }
+        }
+    }
+
+    private void FixupRyttere_Ejer(Rytter_Ejer previousValue)
+    {
+        if (previousValue != null && previousValue.Ejerskaber.Contains(this))
+        {
+            previousValue.Ejerskaber.Remove(this);
+        }
+
+        if (Ryttere_Ejer != null)
+        {
+            if (!Ryttere_Ejer.Ejerskaber.Contains(this))
+            {
+                Ryttere_Ejer.Ejerskaber.Add(this);
+            }
+            if (EjerId != Ryttere_Ejer.RytterEjerId)
+            {
+                EjerId = Ryttere_Ejer.RytterEjerId;
             }
         }
     }
@@ -216,25 +300,23 @@ public partial class Hest
         set;
     }
 
-    public virtual int Forælder_HesteId
+    #endregion
+    #region Navigation Properties
+
+    public virtual Billede Billede
     {
-        get { return _forælder_HesteId; }
+        get { return _billede; }
         set
         {
-            if (_forælder_HesteId != value)
+            if (!ReferenceEquals(_billede, value))
             {
-                if (Heste2 != null && Heste2.HesteId != value)
-                {
-                    Heste2 = null;
-                }
-                _forælder_HesteId = value;
+                var previousValue = _billede;
+                _billede = value;
+                FixupBillede(previousValue);
             }
         }
     }
-    private int _forælder_HesteId;
-
-    #endregion
-    #region Navigation Properties
+    private Billede _billede;
 
     public virtual ICollection<Ejerskab> Ejerskaber
     {
@@ -268,52 +350,99 @@ public partial class Hest
     }
     private ICollection<Ejerskab> _ejerskaber;
 
-    public virtual ICollection<Hest> Heste1
+    public virtual ICollection<Hest> Faderskaber
     {
         get
         {
-            if (_heste1 == null)
+            if (_faderskaber == null)
             {
                 var newCollection = new FixupCollection<Hest>();
-                newCollection.CollectionChanged += FixupHeste1;
-                _heste1 = newCollection;
+                newCollection.CollectionChanged += FixupFaderskaber;
+                _faderskaber = newCollection;
             }
-            return _heste1;
+            return _faderskaber;
         }
         set
         {
-            if (!ReferenceEquals(_heste1, value))
+            if (!ReferenceEquals(_faderskaber, value))
             {
-                var previousValue = _heste1 as FixupCollection<Hest>;
+                var previousValue = _faderskaber as FixupCollection<Hest>;
                 if (previousValue != null)
                 {
-                    previousValue.CollectionChanged -= FixupHeste1;
+                    previousValue.CollectionChanged -= FixupFaderskaber;
                 }
-                _heste1 = value;
+                _faderskaber = value;
                 var newValue = value as FixupCollection<Hest>;
                 if (newValue != null)
                 {
-                    newValue.CollectionChanged += FixupHeste1;
+                    newValue.CollectionChanged += FixupFaderskaber;
                 }
             }
         }
     }
-    private ICollection<Hest> _heste1;
+    private ICollection<Hest> _faderskaber;
 
-    public virtual Hest Heste2
+    public virtual Hest Fader
     {
-        get { return _heste2; }
+        get { return _fader; }
         set
         {
-            if (!ReferenceEquals(_heste2, value))
+            if (!ReferenceEquals(_fader, value))
             {
-                var previousValue = _heste2;
-                _heste2 = value;
-                FixupHeste2(previousValue);
+                var previousValue = _fader;
+                _fader = value;
+                FixupFader(previousValue);
             }
         }
     }
-    private Hest _heste2;
+    private Hest _fader;
+
+    public virtual ICollection<Hest> Moderskaber
+    {
+        get
+        {
+            if (_moderskaber == null)
+            {
+                var newCollection = new FixupCollection<Hest>();
+                newCollection.CollectionChanged += FixupModerskaber;
+                _moderskaber = newCollection;
+            }
+            return _moderskaber;
+        }
+        set
+        {
+            if (!ReferenceEquals(_moderskaber, value))
+            {
+                var previousValue = _moderskaber as FixupCollection<Hest>;
+                if (previousValue != null)
+                {
+                    previousValue.CollectionChanged -= FixupModerskaber;
+                }
+                _moderskaber = value;
+                var newValue = value as FixupCollection<Hest>;
+                if (newValue != null)
+                {
+                    newValue.CollectionChanged += FixupModerskaber;
+                }
+            }
+        }
+    }
+    private ICollection<Hest> _moderskaber;
+
+    public virtual Hest Moder
+    {
+        get { return _moder; }
+        set
+        {
+            if (!ReferenceEquals(_moder, value))
+            {
+                var previousValue = _moder;
+                _moder = value;
+                FixupModer(previousValue);
+            }
+        }
+    }
+    private Hest _moder;
 
     public virtual ICollection<Rytter> Ryttere
     {
@@ -350,22 +479,50 @@ public partial class Hest
     #endregion
     #region Association Fixup
 
-    private void FixupHeste2(Hest previousValue)
+    private void FixupBillede(Billede previousValue)
     {
-        if (previousValue != null && previousValue.Heste1.Contains(this))
+        if (previousValue != null && previousValue.Heste.Contains(this))
         {
-            previousValue.Heste1.Remove(this);
+            previousValue.Heste.Remove(this);
         }
 
-        if (Heste2 != null)
+        if (Billede != null)
         {
-            if (!Heste2.Heste1.Contains(this))
+            if (!Billede.Heste.Contains(this))
             {
-                Heste2.Heste1.Add(this);
+                Billede.Heste.Add(this);
             }
-            if (Forælder_HesteId != Heste2.HesteId)
+        }
+    }
+
+    private void FixupFader(Hest previousValue)
+    {
+        if (previousValue != null && previousValue.Faderskaber.Contains(this))
+        {
+            previousValue.Faderskaber.Remove(this);
+        }
+
+        if (Fader != null)
+        {
+            if (!Fader.Faderskaber.Contains(this))
             {
-                Forælder_HesteId = Heste2.HesteId;
+                Fader.Faderskaber.Add(this);
+            }
+        }
+    }
+
+    private void FixupModer(Hest previousValue)
+    {
+        if (previousValue != null && previousValue.Moderskaber.Contains(this))
+        {
+            previousValue.Moderskaber.Remove(this);
+        }
+
+        if (Moder != null)
+        {
+            if (!Moder.Moderskaber.Contains(this))
+            {
+                Moder.Moderskaber.Add(this);
             }
         }
     }
@@ -392,13 +549,13 @@ public partial class Hest
         }
     }
 
-    private void FixupHeste1(object sender, NotifyCollectionChangedEventArgs e)
+    private void FixupFaderskaber(object sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.NewItems != null)
         {
             foreach (Hest item in e.NewItems)
             {
-                item.Heste2 = this;
+                item.Fader = this;
             }
         }
 
@@ -406,9 +563,31 @@ public partial class Hest
         {
             foreach (Hest item in e.OldItems)
             {
-                if (ReferenceEquals(item.Heste2, this))
+                if (ReferenceEquals(item.Fader, this))
                 {
-                    item.Heste2 = null;
+                    item.Fader = null;
+                }
+            }
+        }
+    }
+
+    private void FixupModerskaber(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems != null)
+        {
+            foreach (Hest item in e.NewItems)
+            {
+                item.Moder = this;
+            }
+        }
+
+        if (e.OldItems != null)
+        {
+            foreach (Hest item in e.OldItems)
+            {
+                if (ReferenceEquals(item.Moder, this))
+                {
+                    item.Moder = null;
                 }
             }
         }
@@ -572,22 +751,22 @@ public partial class Rytter_Ejer
 {
     #region Primitive Properties
 
-    public virtual int RytterId
+    public virtual int RytterEjerId
     {
-        get { return _rytterId; }
+        get { return _rytterEjerId; }
         set
         {
-            if (_rytterId != value)
+            if (_rytterEjerId != value)
             {
                 if (Ryttere != null && Ryttere.RytterId != value)
                 {
                     Ryttere = null;
                 }
-                _rytterId = value;
+                _rytterEjerId = value;
             }
         }
     }
-    private int _rytterId;
+    private int _rytterEjerId;
 
     #endregion
     #region Navigation Properties
@@ -652,9 +831,9 @@ public partial class Rytter_Ejer
         if (Ryttere != null)
         {
             Ryttere.Ryttere_Ejer = this;
-            if (RytterId != Ryttere.RytterId)
+            if (RytterEjerId != Ryttere.RytterId)
             {
-                RytterId = Ryttere.RytterId;
+                RytterEjerId = Ryttere.RytterId;
             }
         }
     }
