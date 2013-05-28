@@ -4,6 +4,9 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+// billeder
+using System.Drawing;
+using System.IO;
 
 public partial class Admin_hesteCRUD : System.Web.UI.Page
 {
@@ -41,10 +44,19 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
             {
                 // indlæs entiteten
                 hesten = ctx.Heste.Single(h => h.HesteId == hesteID);
-                // slet entiteten
-                ctx.DeleteObject(hesten);
-                // gem ændringerne
-                ctx.SaveChanges();
+                try
+                {
+                    // slet billedet
+                    File.Delete(Server.MapPath("~/" + hesten.BilledeSti));
+                    // slet entiteten
+                    ctx.DeleteObject(hesten);
+                    // gem ændringerne
+                    ctx.SaveChanges();
+                }
+                catch (System.IO.DirectoryNotFoundException de)
+                {
+                    // nada
+                }
             }
             RepeaterHeste.DataBind();
         }
@@ -99,7 +111,37 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
             hesten.Forælder_HesteId = ctx.Heste.Single(f => f.Navn == "Stamfar").HesteId;
             hesten.Fødestald = "";
             hesten.FødeDato = DateTime.Now;
-            hesten.BilledeSti = "";
+
+            if (FileUploadBillede.HasFile)
+            {
+                String guid = Guid.NewGuid().ToString();
+                String path = "images/heste/";
+                String realPath = Server.MapPath("~/" + path);
+
+                ImageNet.FluentImage img = ImageNet.FluentImage.FromStream(FileUploadBillede.FileContent);
+                
+                Rectangle crop;
+                if (img.Current.Height > img.Current.Width)  // højformat
+                {
+                    int width = img.Current.Width;
+                    int offset = (img.Current.Height - width) / 2;
+                    crop = new Rectangle(0, offset, width, width);
+                }
+                else                                         // tværformat
+                {
+                    int height = img.Current.Height;
+                    int offset = (img.Current.Width - height) / 2;
+                    crop = new Rectangle(offset, 0, height, height);
+                }
+                img = img.Resize.Crop(crop).Resize.Scale(800);
+
+                img.Save(realPath + guid + ".png", ImageNet.OutputFormat.Png);
+                hesten.BilledeSti = path + guid + ".png";
+            }
+            else
+            {
+                hesten.BilledeSti = "";
+            }
 
             // her er magien
             ctx.Heste.AddObject(hesten);

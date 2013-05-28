@@ -54,6 +54,11 @@
                     Width="200px"></asp:Label>
                 <asp:TextBox ID="TextBoxHøjde" runat="server" Width="200px"></asp:TextBox>
                 <br />
+                <asp:Label ID="LabelBillede" runat="server" BackColor="#f0f0f0" Text="Billede"
+                    Width="200px"></asp:Label>
+                <asp:FileUpload ID="FileUploadBillede" runat="server" />
+                <br />
+
                 <asp:Button ID="ButtonOpdater" runat="server" Text="Opdater" 
                     onclick="ButtonOpdater_Click" Visible="false" />
                 <asp:Button ID="ButtonOpret" runat="server" Text="Opret" 
