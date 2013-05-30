@@ -45,19 +45,10 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
             {
                 // indlæs entiteten
                 hesten = ctx.Heste.Single(h => h.HesteId == hesteID);
-                try
-                {
-                    // slet billedet
-//                    File.Delete(Server.MapPath("~/" + hesten.BilledeSti));
-                    // slet entiteten
-                    ctx.DeleteObject(hesten);
-                    // gem ændringerne
-                    ctx.SaveChanges();
-                }
-                catch (System.IO.DirectoryNotFoundException de)
-                {
-                    // nada
-                }
+                // slet entiteten
+                ctx.DeleteObject(hesten);
+                // gem ændringerne
+                ctx.SaveChanges();
             }
             RepeaterHeste.DataBind();
         }
@@ -130,17 +121,19 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
 
     private void GemHesteBillede(Hest hesten)
     {
+        // Kun hvis brugeren har valgt en fil til upload, skal vi gøre noget. 
+        // Det sikrer at der ikke sker nogen skade hvis brugeren _IKKE_ vælger en fil ved rediger. (så bliver det gamle billede bevaret).
         if (FileUploadBillede.HasFile)
         {
-//            String guid = Guid.NewGuid().ToString();
-//            String path = "images/heste/";
-//            String realPath = Server.MapPath("~/" + path);
-
+            // Vi henter billedet direkte fra FileUpload-controllen FluentImage via imageStream.
             ImageNet.FluentImage img = ImageNet.FluentImage.FromStream(FileUploadBillede.FileContent);
 
             Billede hestensBillede = new Billede();
+            // put originalbilledet i heste tabellen (via entiteten Hest)
             hestensBillede.full = Convert.FromBase64String(img.ToString());
 
+            // Her laver vi et rektangel (eller egentlig et kvadrat) til at lave beskæring.
+            // Kvadratet er så stort som den korteste side, og beskærer midt på den længste side. En tegning ville være bedre ...
             Rectangle crop;
             if (img.Current.Height > img.Current.Width)  // højformat
             {
@@ -154,10 +147,8 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
                 int offset = (img.Current.Width - height) / 2;
                 crop = new Rectangle(offset, 0, height, height);
             }
+            // beskær og skaler billedet til 800*800 px, samt en 200*200 og 40*40 px versioner
             img = img.Resize.Crop(crop).Resize.Scale(800);
-
-//            img.Save(realPath + guid + ".png", ImageNet.OutputFormat.Png);
-//            hesten.BilledeSti = path + guid + ".png";
 
             hestensBillede.large = Convert.FromBase64String(img.ToString());
             hestensBillede.small = Convert.FromBase64String(img.Resize.Scale(200).ToString());
@@ -167,6 +158,7 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
         }
         else
         {
+            // Billedsti" er stadig med i datamodellen og databasen hvor den ikke må være null. Skal fjernes.
             hesten.BilledeSti = "";
         }
     }
