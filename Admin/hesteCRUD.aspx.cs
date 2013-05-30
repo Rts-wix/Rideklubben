@@ -28,6 +28,7 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
                 TextBoxNavn.Text = hesten.Navn;
                 TextBoxVægt.Text = hesten.Vægt.ToString();
                 TextBoxHøjde.Text = hesten.Højde.ToString();
+                ImageEdit.ImageUrl = "../images/hesteBillede.aspx?id=" + hesten.HesteId + "&size=small";
                 ViewState["hesteID"] = hesteID;
             }
 
@@ -47,7 +48,7 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
                 try
                 {
                     // slet billedet
-                    File.Delete(Server.MapPath("~/" + hesten.BilledeSti));
+//                    File.Delete(Server.MapPath("~/" + hesten.BilledeSti));
                     // slet entiteten
                     ctx.DeleteObject(hesten);
                     // gem ændringerne
@@ -131,9 +132,9 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
     {
         if (FileUploadBillede.HasFile)
         {
-            String guid = Guid.NewGuid().ToString();
-            String path = "images/heste/";
-            String realPath = Server.MapPath("~/" + path);
+//            String guid = Guid.NewGuid().ToString();
+//            String path = "images/heste/";
+//            String realPath = Server.MapPath("~/" + path);
 
             ImageNet.FluentImage img = ImageNet.FluentImage.FromStream(FileUploadBillede.FileContent);
 
@@ -155,8 +156,8 @@ public partial class Admin_hesteCRUD : System.Web.UI.Page
             }
             img = img.Resize.Crop(crop).Resize.Scale(800);
 
-            img.Save(realPath + guid + ".png", ImageNet.OutputFormat.Png);
-            hesten.BilledeSti = path + guid + ".png";
+//            img.Save(realPath + guid + ".png", ImageNet.OutputFormat.Png);
+//            hesten.BilledeSti = path + guid + ".png";
 
             hestensBillede.large = Convert.FromBase64String(img.ToString());
             hestensBillede.small = Convert.FromBase64String(img.Resize.Scale(200).ToString());

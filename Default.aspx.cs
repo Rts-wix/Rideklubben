@@ -40,13 +40,25 @@ public partial class _Default : System.Web.UI.Page
             CenterImageNavn.Text = hesten.Navn;
             // udregn alder i år
             CenterImageAlder.Text = Math.Floor(((DateTime.Now - hesten.FødeDato).TotalDays / 365)).ToString() + " år";
-            CenterIamgeOprindelse.Text = hesten.Fødestald;
+
+            //CenterImageOprindelse.Text = hesten.Fødestald;
             CenterImageImg.ImageUrl = hesten.BilledeSti;
 
             // HER BLIR DET SMART!
             // vi binder alle hestens ryttere til repeateren i venstre side.
             RepeaterLeftColumn.DataSource = hesten.Ryttere;
             RepeaterLeftColumn.DataBind();
+
+            // hestens ejere
+            RepeaterRightColumn.DataSource = hesten.Ejerskaber;
+            RepeaterRightColumn.DataBind();
+
+            foreach (var ejer in hesten.Ejerskaber)
+            {
+                Response.Write(ejer.Ryttere_Ejer.Ryttere.BilledeSti);
+                Response.Write(ejer.Ryttere_Ejer.Ryttere.RytterId);
+
+            }
 
         }
     }

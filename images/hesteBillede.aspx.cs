@@ -13,31 +13,40 @@ public partial class images_hesteBillede : System.Web.UI.Page
         {
             int id = Convert.ToInt32(Request.QueryString["id"]);
             
-            Response.ContentType = "image/png";
+            //Response.ContentType = "image/png";
+            Response.ContentType = "application/octet-stream";
 
             byte[] imgBuffer = null;
             using (var ctx = new RideklubbenContext())
             {
-                Hest hesten = ctx.Heste.Single(h => h.HesteId == id);
-                String size = Request.QueryString["size"];
-                if (size == "large")
+                try
                 {
-                    imgBuffer = hesten.Billede.large;
+                    Hest hesten = ctx.Heste.Single(h => h.HesteId == id);
+                    String size = Request.QueryString["size"];
+                    if (size == "large")
+                    {
+                        imgBuffer = hesten.Billede.large;
+                    }
+                    else if (size == "small")
+                    {
+                        imgBuffer = hesten.Billede.small;
+                    }
+                    else if (size == "tiny")
+                    {
+                        imgBuffer = hesten.Billede.tiny;
+                    }
+            
+                    Response.BinaryWrite(imgBuffer);
                 }
-                else if (size == "small")
-                {
-                    imgBuffer = hesten.Billede.small;
-                }
-                else if (size == "tiny")
-                {
-                    imgBuffer = hesten.Billede.tiny;
-                }
+                catch (System.InvalidOperationException ex)
+                { }
+                catch (System.NullReferenceException ex)
+                { }
             }
 
             //stream it back in the HTTP response
-            Response.BinaryWrite(imgBuffer);
             Response.Flush();
-            Response.Close();
+            //Response.Close();
         }
     }
 }

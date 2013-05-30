@@ -32,7 +32,9 @@
                 <ItemTemplate>
                     <div class="hest">
                         <asp:LinkButton ID="LinkButtonHest" runat="server" CommandName="hentHest" CommandArgument='<%# Eval("HesteId") %>'>
-                        <asp:Image ID="Image1" runat="server" ImageUrl='<%# "../" + Eval("BilledeSti") %>' Width="100" />
+<%--                        <asp:Image ID="Image1" runat="server" ImageUrl='<%# "../" + Eval("BilledeSti") %>' Width="100" />--%>
+                        <asp:Image ID="Image2" runat="server" ImageUrl='<%# "../images/hesteBillede.aspx?id=" + Eval("HesteId") + "&size=tiny" %>' />
+                        
                         <span class="hesteNavn"><%# Eval("Navn") %></span>
                         </asp:LinkButton>
                         <asp:LinkButton ID="LinkButtonSlet" runat="server" CommandName="sletHest" CommandArgument='<%# Eval("HesteId") %>'>Slet</asp:LinkButton>
@@ -42,6 +44,7 @@
         </div>
         <div id="edit">
             <asp:Panel ID="PanelEdit" runat="server" Visible="false" >
+                <asp:Image ID="ImageEdit" runat="server" ImageUrl='<%# "../images/hesteBillede.aspx?id=" + Eval("HesteId") + "&size=small" %>' style="float:right" />
                 <asp:Label ID="LabelNavn" runat="server" BackColor="#F0F0F0" Text="Navn" 
                     Width="200px"></asp:Label>
                 <asp:TextBox ID="TextBoxNavn" runat="server" Width="200px"></asp:TextBox>
